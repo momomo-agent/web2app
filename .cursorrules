@@ -1,0 +1,45 @@
+# web2app — Convert web content to native iOS & Android apps
+
+You have access to `web2app` (install: `npm install -g web2app`).
+
+## Usage
+
+```bash
+# URL → App
+web2app init --url https://example.com --name "MyApp" --platform android
+
+# HTML file → App  
+web2app init --source ./index.html --name "MyApp" --platform both
+
+# Web project → App
+web2app init --source ./project/ --name "MyApp" --platform both
+
+# With permissions
+web2app init --source ./project/ --name "MyApp" --permissions camera,microphone,location --fullscreen --platform android
+
+# Build
+cd <project-dir> && web2app build --platform android
+```
+
+## Options
+
+- `--name` (required): App name
+- `--id`: Bundle ID (default: auto from name)
+- `--url`: Remote URL to wrap
+- `--source`: Local file or directory
+- `--platform`: android | ios | both (default: both)
+- `--permissions`: camera,microphone,location,storage,notifications
+- `--fullscreen`: Enable fullscreen mode
+- `--orientation`: portrait | landscape | any
+- `--color`: Theme/status bar color (hex)
+- `--icon`: App icon path (1024x1024 PNG)
+
+## Prerequisites
+
+- Android: JDK 17+, Android SDK
+- iOS: macOS + Xcode 15+ + CocoaPods
+
+## Output
+
+- APK: `android/app/build/outputs/apk/debug/app-debug.apk`
+- iOS: Use `npx cap open ios` → Xcode archive

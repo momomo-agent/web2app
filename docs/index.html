@@ -434,23 +434,44 @@
   <div class="agent-section">
     <div class="container">
       <h2>Works with AI agents</h2>
-      <p>Give your agent this page. It knows what to do.</p>
+      <p>Give your agent this page, or use the config files below.</p>
       <div class="agent-cards">
         <div class="agent-card">
           <div class="logo">🦀</div>
           <h3>OpenClaw</h3>
-          <p>Install as a skill</p>
+          <p>Copy <code>SKILL.md</code> to skills/</p>
         </div>
         <div class="agent-card">
           <div class="logo">🤖</div>
           <h3>Claude Code</h3>
-          <p>Paste docs in AGENTS.md</p>
+          <p>Copy <code>AGENTS.md</code> to project root</p>
         </div>
         <div class="agent-card">
           <div class="logo">▶️</div>
           <h3>Cursor</h3>
-          <p>Add to .cursorrules</p>
+          <p>Copy <code>.cursorrules</code> to project root</p>
         </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 24px;">
+        <div class="code-header">
+          <span class="code-dot red"></span>
+          <span class="code-dot yellow"></span>
+          <span class="code-dot green"></span>
+          Agent setup
+        </div>
+        <pre><span class="comment"># OpenClaw — install as skill</span>
+<span class="cmd">git clone</span> <span class="str">https://github.com/momomo-agent/web2app.git</span>
+<span class="cmd">cp</span> web2app/SKILL.md ~/.openclaw/skills/web2app/SKILL.md
+
+<span class="comment"># Claude Code — copy AGENTS.md to your project</span>
+<span class="cmd">curl</span> -o AGENTS.md <span class="str">https://raw.githubusercontent.com/momomo-agent/web2app/main/AGENTS.md</span>
+
+<span class="comment"># Cursor — copy .cursorrules to your project</span>
+<span class="cmd">curl</span> -o .cursorrules <span class="str">https://raw.githubusercontent.com/momomo-agent/web2app/main/.cursorrules</span>
+
+<span class="comment"># Or just send this page to any agent:</span>
+<span class="comment"># https://momomo-agent.github.io/web2app/</span></pre>
       </div>
     </div>
   </div>

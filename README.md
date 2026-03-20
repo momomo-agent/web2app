@@ -1,41 +1,80 @@
 # web2app
 
-把任何 Web 内容变成原生 App（iOS + Android）。
+> Turn any web content into native iOS & Android apps. One command.
 
-## 三种模式
-
-```bash
-# 1. URL 模式 — 网址变 App
-web2app --url https://your-site.com --name "MyApp" --platform android
-
-# 2. 文件模式 — HTML 文件变 App
-web2app --source ./index.html --name "MyApp" --platform both
-
-# 3. 工程模式 — Web 项目变 App
-web2app --source ./my-project/ --name "MyApp" --platform both
-```
-
-## 安装
+## Quick Start
 
 ```bash
 npm install -g web2app
+
+# URL → App
+web2app init --url https://your-site.com --name "MyApp" --platform android
+
+# HTML file → App
+web2app init --source ./index.html --name "MyApp" --platform both
+
+# Web project → App (with permissions)
+web2app init --source ./project/ --name "MyApp" --permissions camera,microphone
+
+# Build
+cd my-app && web2app build --platform android
 ```
 
-## 前置要求
+## Agent Integration
 
-- **Android**: JDK 17+, Android SDK, Gradle
-- **iOS**: Xcode 15+, CocoaPods（仅 macOS）
+### OpenClaw
 
-## 功能
+```bash
+openclaw install web2app
+```
 
-- ✅ iOS + Android 双端
-- ✅ 自定义图标、名称、包名
-- ✅ 权限管理（摄像头、麦克风、位置、存储等）
-- ✅ 全屏/状态栏控制
-- ✅ 离线支持
-- ✅ 自适应屏幕
-- ✅ AI agent 友好（Claude Code / Cursor / OpenClaw）
+Or manually copy `SKILL.md` to your skills directory.
 
-## 许可
+### Claude Code
+
+Copy `AGENTS.md` to your project root. Claude Code will automatically read it.
+
+### Cursor
+
+Copy `.cursorrules` to your project root. Cursor will automatically read it.
+
+### Any AI Agent
+
+Just give your agent the docs page: **https://momomo-agent.github.io/web2app/**
+
+The page contains everything an agent needs to use web2app.
+
+## Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--name` | App name | (required) |
+| `--id` | Bundle ID | auto-generated |
+| `--url` | Remote URL to wrap | - |
+| `--source` | Local file or directory | - |
+| `--platform` | `android`, `ios`, `both` | `both` |
+| `--permissions` | Comma-separated list | none |
+| `--fullscreen` | Enable fullscreen | `false` |
+| `--orientation` | `portrait`, `landscape`, `any` | `any` |
+| `--color` | Theme color | `#ffffff` |
+| `--icon` | App icon (1024x1024 PNG) | - |
+| `--out` | Output directory | `.` |
+
+## Permissions
+
+| Flag | Android | iOS |
+|------|---------|-----|
+| `camera` | CAMERA | NSCameraUsageDescription |
+| `microphone` | RECORD_AUDIO | NSMicrophoneUsageDescription |
+| `location` | ACCESS_FINE_LOCATION | NSLocationWhenInUseUsageDescription |
+| `storage` | READ/WRITE_EXTERNAL_STORAGE | NSPhotoLibraryUsageDescription |
+| `notifications` | POST_NOTIFICATIONS | Push Notifications capability |
+
+## Prerequisites
+
+**Android**: JDK 17+, Android SDK, Gradle
+**iOS**: Xcode 15+, CocoaPods (macOS only)
+
+## License
 
 MIT
