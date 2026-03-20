@@ -326,8 +326,8 @@
     <div class="container">
       <h1><span>web2app</span></h1>
       <p>Turn any web content into native iOS & Android apps. One command.</p>
-      <div class="hero-install" onclick="navigator.clipboard.writeText('npm install -g web2app')">
-        $ npm install -g web2app
+      <div class="hero-install" onclick="navigator.clipboard.writeText('git clone https://github.com/momomo-agent/web2app.git && cd web2app && npm install && npm link')">
+        $ git clone → npm install → npm link
       </div>
     </div>
   </div>
@@ -460,15 +460,20 @@
           <span class="code-dot green"></span>
           Agent setup
         </div>
-        <pre><span class="comment"># OpenClaw — install as skill</span>
+        <pre><span class="comment"># 1. Install web2app</span>
 <span class="cmd">git clone</span> <span class="str">https://github.com/momomo-agent/web2app.git</span>
-<span class="cmd">cp</span> web2app/SKILL.md ~/.openclaw/skills/web2app/SKILL.md
+<span class="cmd">cd</span> web2app && <span class="cmd">npm</span> install && <span class="cmd">npm</span> link
+
+<span class="comment"># 2. Agent config (pick one)</span>
+
+<span class="comment"># OpenClaw — copy SKILL.md to skills/</span>
+<span class="cmd">cp</span> SKILL.md ~/.openclaw/skills/web2app/SKILL.md
 
 <span class="comment"># Claude Code — copy AGENTS.md to your project</span>
-<span class="cmd">curl</span> -o AGENTS.md <span class="str">https://raw.githubusercontent.com/momomo-agent/web2app/main/AGENTS.md</span>
+<span class="cmd">cp</span> AGENTS.md /path/to/your-project/
 
 <span class="comment"># Cursor — copy .cursorrules to your project</span>
-<span class="cmd">curl</span> -o .cursorrules <span class="str">https://raw.githubusercontent.com/momomo-agent/web2app/main/.cursorrules</span>
+<span class="cmd">cp</span> .cursorrules /path/to/your-project/
 
 <span class="comment"># Or just send this page to any agent:</span>
 <span class="comment"># https://momomo-agent.github.io/web2app/</span></pre>

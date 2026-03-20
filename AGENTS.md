@@ -5,7 +5,10 @@ You have access to `web2app`, a CLI tool that turns web content into native iOS 
 ## Installation
 
 ```bash
-npm install -g web2app
+git clone https://github.com/momomo-agent/web2app.git
+cd web2app
+npm install
+npm link   # registers global command 'web2app'
 ```
 
 ## When to use

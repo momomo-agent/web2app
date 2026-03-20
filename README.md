@@ -5,7 +5,10 @@
 ## Quick Start
 
 ```bash
-npm install -g web2app
+git clone https://github.com/momomo-agent/web2app.git
+cd web2app
+npm install
+npm link   # 注册全局命令 web2app
 
 # URL → App
 web2app init --url https://your-site.com --name "MyApp" --platform android

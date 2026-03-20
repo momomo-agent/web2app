@@ -10,7 +10,10 @@ Turn any web content into native iOS & Android apps.
 ## Installation
 
 ```bash
-npm install -g web2app
+git clone https://github.com/momomo-agent/web2app.git
+cd web2app
+npm install
+npm link   # registers global command 'web2app'
 ```
 
 ## Usage

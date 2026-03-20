@@ -1,6 +1,6 @@
 # web2app — Convert web content to native iOS & Android apps
 
-You have access to `web2app` (install: `npm install -g web2app`).
+You have access to `web2app` (install: `git clone https://github.com/momomo-agent/web2app.git && cd web2app && npm install && npm link`).
 
 ## Usage
 
