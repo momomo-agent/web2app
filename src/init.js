@@ -126,14 +126,21 @@ async function init(opts) {
       url: url,
       cleartext: true
     } : undefined,
-    plugins: {},
+    plugins: {
+      StatusBar: {
+        overlaysWebView: true,
+        style: 'dark',
+        backgroundColor: '#00000000'
+      }
+    },
     android: {
       backgroundColor: color,
-      allowMixedContent: true
+      allowMixedContent: true,
+      appendUserAgent: 'web2app'
     },
     ios: {
       backgroundColor: color,
-      contentInset: fullscreen ? 'always' : 'automatic'
+      contentInset: 'always'
     }
   }
 
@@ -176,6 +183,9 @@ async function init(opts) {
   if (platform === 'android' || platform === 'both') {
     execSync('npx cap add android', { cwd: projectDir, stdio: 'inherit' })
     console.log(chalk.green('✓'), 'Android platform added')
+    
+    // Apply immersive mode
+    await applyAndroidImmersive(projectDir, bundleId)
     
     // Apply permissions to AndroidManifest.xml
     if (permList.length > 0) {
@@ -221,6 +231,76 @@ async function init(opts) {
   }
 
   return projectDir
+}
+
+async function applyAndroidImmersive(projectDir, bundleId) {
+  // Find MainActivity.java
+  const pkgPath = bundleId.replace(/\./g, '/')
+  const mainActivityPath = path.join(projectDir, 'android', 'app', 'src', 'main', 'java', pkgPath, 'MainActivity.java')
+  
+  if (!await fs.pathExists(mainActivityPath)) {
+    console.log(chalk.yellow('⚠'), 'MainActivity.java not found, skipping immersive mode')
+    return
+  }
+  
+  const immersiveCode = `package ${bundleId};
+
+import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Edge-to-edge: extend content behind status bar and navigation bar
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        // Make status bar and navigation bar transparent
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+
+        // Optional: control system bar appearance (light/dark icons)
+        WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        if (controller != null) {
+            controller.setAppearanceLightStatusBars(false);
+            controller.setAppearanceLightNavigationBars(false);
+        }
+    }
+}
+`
+  
+  await fs.writeFile(mainActivityPath, immersiveCode)
+  console.log(chalk.green('✓'), 'Android immersive mode applied')
+  
+  // Also update styles.xml for edge-to-edge theme
+  const stylesPath = path.join(projectDir, 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml')
+  if (await fs.pathExists(stylesPath)) {
+    const styles = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+</resources>
+`
+    await fs.writeFile(stylesPath, styles)
+    console.log(chalk.green('✓'), 'Android styles.xml updated for edge-to-edge')
+  }
 }
 
 function generateURLWrapper(url, name, fullscreen, color) {
