@@ -1,0 +1,20 @@
+{
+  "name": "web2app",
+  "version": "0.1.0",
+  "description": "Turn any web content into native iOS & Android apps",
+  "bin": {
+    "web2app": "./src/cli.js"
+  },
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "node src/cli.js"
+  },
+  "keywords": ["web", "app", "apk", "ipa", "capacitor", "webview", "pwa"],
+  "author": "momomo-agent",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.0.0",
+    "fs-extra": "^11.2.0",
+    "chalk": "^4.1.2"
+  }
+}

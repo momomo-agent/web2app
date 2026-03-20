@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>web2app — Web → Native App</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1a1a1a;
+      --border: #222;
+      --text: #e0e0e0;
+      --text2: #888;
+      --accent: #3b82f6;
+      --accent2: #60a5fa;
+      --green: #22c55e;
+      --orange: #f59e0b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 20px;
+      color: var(--text2);
+      max-width: 500px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-install {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 15px;
+      color: var(--green);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .hero-install:hover {
+      border-color: var(--accent);
+    }
+
+    /* Modes */
+    .modes {
+      padding: 60px 0;
+    }
+
+    .modes h2 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 32px;
+      letter-spacing: -1px;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .mode-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .mode-card .icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .mode-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .mode-card p {
+      font-size: 14px;
+      color: var(--text2);
+    }
+
+    /* Code blocks */
+    .code-section {
+      padding: 60px 0;
+    }
+
+    .code-section h2 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: -1px;
+    }
+
+    .code-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .code-dot.red { background: #ef4444; }
+    .code-dot.yellow { background: #f59e0b; }
+    .code-dot.green { background: #22c55e; }
+
+    pre {
+      padding: 20px;
+      overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .cmd { color: var(--green); }
+    .flag { color: var(--orange); }
+    .str { color: var(--accent2); }
+    .comment { color: #555; }
+
+    /* Features */
+    .features {
+      padding: 60px 0;
+    }
+
+    .features h2 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 32px;
+      letter-spacing: -1px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .feature h3 {
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .feature p {
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    /* Agent section */
+    .agent-section {
+      padding: 60px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .agent-section h2 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+
+    .agent-section > .container > p {
+      color: var(--text2);
+      margin-bottom: 24px;
+      font-size: 16px;
+    }
+
+    .agent-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .agent-card .logo {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    .agent-card h3 {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .agent-card p {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    /* Permissions */
+    .permissions {
+      padding: 60px 0;
+    }
+
+    .permissions h2 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: -1px;
+    }
+
+    .perm-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .perm-table th {
+      text-align: left;
+      padding: 10px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      font-weight: 500;
+    }
+
+    .perm-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .perm-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .perm-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+
+    .perm-badge.android { background: rgba(34,197,94,0.15); color: var(--green); }
+    .perm-badge.ios { background: rgba(59,130,246,0.15); color: var(--accent2); }
+
+    /* Footer */
+    footer {
+      padding: 40px 0;
+      text-align: center;
+      color: var(--text2);
+      font-size: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    footer a {
+      color: var(--accent2);
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 32px; }
+      .mode-grid, .feature-grid, .agent-cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="container">
+      <h1><span>web2app</span></h1>
+      <p>Turn any web content into native iOS & Android apps. One command.</p>
+      <div class="hero-install" onclick="navigator.clipboard.writeText('npm install -g web2app')">
+        $ npm install -g web2app
+      </div>
+    </div>
+  </div>
+
+  <div class="modes">
+    <div class="container">
+      <h2>Three modes</h2>
+      <div class="mode-grid">
+        <div class="mode-card">
+          <div class="icon">🌐</div>
+          <h3>URL</h3>
+          <p>Wrap any website into a native app. Just pass a URL.</p>
+        </div>
+        <div class="mode-card">
+          <div class="icon">📄</div>
+          <h3>File</h3>
+          <p>Single HTML file → full native app with offline support.</p>
+        </div>
+        <div class="mode-card">
+          <div class="icon">📦</div>
+          <h3>Project</h3>
+          <p>React, Vue, vanilla — any web project, auto-detected.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-section">
+    <div class="container">
+      <h2>Usage</h2>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot red"></span>
+          <span class="code-dot yellow"></span>
+          <span class="code-dot green"></span>
+          URL mode
+        </div>
+        <pre><span class="comment"># Wrap a website into an Android app</span>
+<span class="cmd">web2app</span> init <span class="flag">--url</span> <span class="str">https://your-site.com</span> <span class="flag">--name</span> <span class="str">"My App"</span> <span class="flag">--platform</span> android
+
+<span class="comment"># Build APK</span>
+<span class="cmd">cd</span> my-app && <span class="cmd">web2app</span> build <span class="flag">--platform</span> android</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot red"></span>
+          <span class="code-dot yellow"></span>
+          <span class="code-dot green"></span>
+          File mode
+        </div>
+        <pre><span class="comment"># Turn an HTML file into an app (both platforms)</span>
+<span class="cmd">web2app</span> init <span class="flag">--source</span> <span class="str">./index.html</span> <span class="flag">--name</span> <span class="str">"My App"</span> <span class="flag">--platform</span> both</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot red"></span>
+          <span class="code-dot yellow"></span>
+          <span class="code-dot green"></span>
+          Project mode + permissions
+        </div>
+        <pre><span class="comment"># Web project with camera & mic permissions</span>
+<span class="cmd">web2app</span> init <span class="flag">--source</span> <span class="str">./my-project/</span> <span class="flag">--name</span> <span class="str">"My App"</span> \
+  <span class="flag">--permissions</span> <span class="str">camera,microphone,location</span> \
+  <span class="flag">--fullscreen</span> <span class="flag">--orientation</span> portrait</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="container">
+      <h2>Features</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <h3>📱 iOS + Android</h3>
+          <p>Build for both platforms from a single project. APK and IPA output.</p>
+        </div>
+        <div class="feature">
+          <h3>🔒 Permissions</h3>
+          <p>Camera, microphone, location, storage, notifications — declare what you need.</p>
+        </div>
+        <div class="feature">
+          <h3>📡 Online & Offline</h3>
+          <p>URL mode for live sites, file/project mode for fully offline apps.</p>
+        </div>
+        <div class="feature">
+          <h3>🎨 Customizable</h3>
+          <p>App icon, splash screen, status bar color, orientation lock.</p>
+        </div>
+        <div class="feature">
+          <h3>⚡ Zero config</h3>
+          <p>Auto-detects build output (dist/, build/, public/). No config files needed.</p>
+        </div>
+        <div class="feature">
+          <h3>🤖 Agent-friendly</h3>
+          <p>Designed for AI agents. Claude Code, Cursor, OpenClaw — just paste the docs.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="agent-section">
+    <div class="container">
+      <h2>Works with AI agents</h2>
+      <p>Give your agent this page. It knows what to do.</p>
+      <div class="agent-cards">
+        <div class="agent-card">
+          <div class="logo">🦀</div>
+          <h3>OpenClaw</h3>
+          <p>Install as a skill</p>
+        </div>
+        <div class="agent-card">
+          <div class="logo">🤖</div>
+          <h3>Claude Code</h3>
+          <p>Paste docs in AGENTS.md</p>
+        </div>
+        <div class="agent-card">
+          <div class="logo">▶️</div>
+          <h3>Cursor</h3>
+          <p>Add to .cursorrules</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="permissions">
+    <div class="container">
+      <h2>Permissions reference</h2>
+      <div class="code-block">
+        <table class="perm-table">
+          <thead>
+            <tr>
+              <th>Flag</th>
+              <th>Android</th>
+              <th>iOS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>camera</code></td>
+              <td><span class="perm-badge android">CAMERA</span></td>
+              <td><span class="perm-badge ios">NSCameraUsageDescription</span></td>
+            </tr>
+            <tr>
+              <td><code>microphone</code></td>
+              <td><span class="perm-badge android">RECORD_AUDIO</span></td>
+              <td><span class="perm-badge ios">NSMicrophoneUsageDescription</span></td>
+            </tr>
+            <tr>
+              <td><code>location</code></td>
+              <td><span class="perm-badge android">ACCESS_FINE_LOCATION</span></td>
+              <td><span class="perm-badge ios">NSLocationWhenInUseUsageDescription</span></td>
+            </tr>
+            <tr>
+              <td><code>storage</code></td>
+              <td><span class="perm-badge android">READ/WRITE_EXTERNAL_STORAGE</span></td>
+              <td><span class="perm-badge ios">NSPhotoLibraryUsageDescription</span></td>
+            </tr>
+            <tr>
+              <td><code>notifications</code></td>
+              <td><span class="perm-badge android">POST_NOTIFICATIONS</span></td>
+              <td><span class="perm-badge ios">Push Notifications capability</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-section">
+    <div class="container">
+      <h2>Prerequisites</h2>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot red"></span>
+          <span class="code-dot yellow"></span>
+          <span class="code-dot green"></span>
+          Requirements
+        </div>
+        <pre><span class="comment"># Android</span>
+<span class="cmd">brew</span> install openjdk@17          <span class="comment"># or apt install openjdk-17-jdk</span>
+<span class="cmd">brew</span> install android-commandlinetools
+<span class="cmd">sdkmanager</span> <span class="str">"platforms;android-34"</span> <span class="str">"build-tools;34.0.0"</span>
+
+<span class="comment"># iOS (macOS only)</span>
+<span class="comment"># Install Xcode from Mac App Store</span>
+<span class="cmd">sudo</span> gem install cocoapods</pre>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>
+        <a href="https://github.com/momomo-agent/web2app">GitHub</a> ·
+        MIT License ·
+        Built by <a href="https://github.com/momomo-agent">momomo-agent</a>
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
