@@ -3,557 +3,685 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>web2app — Web → Native App</title>
+  <title>web2app — Web to Native in One Command</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0a;
-      --surface: #141414;
-      --surface2: #1a1a1a;
-      --border: #222;
-      --text: #e0e0e0;
-      --text2: #888;
-      --accent: #3b82f6;
-      --accent2: #60a5fa;
-      --green: #22c55e;
-      --orange: #f59e0b;
+      --bg: #08080a;
+      --surface: #111113;
+      --surface2: #18181b;
+      --border: #27272a;
+      --text: #fafafa;
+      --text2: #71717a;
+      --text3: #52525b;
+      --accent: #a78bfa;
+      --accent2: #c4b5fd;
+      --green: #4ade80;
+      --orange: #fb923c;
+      --blue: #60a5fa;
+      --pink: #f472b6;
+      --mono: 'DM Mono', monospace;
+      --serif: 'Instrument Serif', serif;
+      --sans: 'DM Sans', -apple-system, sans-serif;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-family: var(--sans);
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
+      overflow-x: hidden;
     }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
+    ::selection { background: rgba(167,139,250,0.3); }
 
-    /* Hero */
+    .container { max-width: 1000px; margin: 0 auto; padding: 0 32px; }
+
+    /* ── Hero ── */
     .hero {
-      padding: 80px 0 60px;
+      padding: 120px 0 80px;
       text-align: center;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent);
+      border: 1px solid rgba(167,139,250,0.2);
+      border-radius: 20px;
+      padding: 6px 16px;
+      margin-bottom: 32px;
+      letter-spacing: 0.5px;
     }
 
     .hero h1 {
-      font-size: 48px;
-      font-weight: 700;
+      font-family: var(--serif);
+      font-size: 72px;
+      font-weight: 400;
       letter-spacing: -2px;
-      margin-bottom: 16px;
+      line-height: 1.1;
+      margin-bottom: 24px;
     }
 
-    .hero h1 span {
-      background: linear-gradient(135deg, var(--accent), var(--green));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .hero h1 em {
+      font-style: italic;
+      color: var(--accent);
     }
 
     .hero p {
-      font-size: 20px;
-      color: var(--text2);
-      max-width: 500px;
-      margin: 0 auto 32px;
-    }
-
-    .hero-install {
-      display: inline-block;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 24px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 15px;
-      color: var(--green);
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-
-    .hero-install:hover {
-      border-color: var(--accent);
-    }
-
-    /* Modes */
-    .modes {
-      padding: 60px 0;
-    }
-
-    .modes h2 {
-      font-size: 28px;
-      font-weight: 600;
-      margin-bottom: 32px;
-      letter-spacing: -1px;
-    }
-
-    .mode-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .mode-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-    }
-
-    .mode-card .icon {
-      font-size: 32px;
-      margin-bottom: 12px;
-    }
-
-    .mode-card h3 {
       font-size: 18px;
-      margin-bottom: 8px;
-    }
-
-    .mode-card p {
-      font-size: 14px;
       color: var(--text2);
-    }
-
-    /* Code blocks */
-    .code-section {
-      padding: 60px 0;
-    }
-
-    .code-section h2 {
-      font-size: 28px;
-      font-weight: 600;
-      margin-bottom: 24px;
-      letter-spacing: -1px;
-    }
-
-    .code-block {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 24px;
-    }
-
-    .code-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-      color: var(--text2);
-    }
-
-    .code-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .code-dot.red { background: #ef4444; }
-    .code-dot.yellow { background: #f59e0b; }
-    .code-dot.green { background: #22c55e; }
-
-    pre {
-      padding: 20px;
-      overflow-x: auto;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 14px;
+      max-width: 480px;
+      margin: 0 auto 48px;
       line-height: 1.7;
     }
 
-    .cmd { color: var(--green); }
-    .flag { color: var(--orange); }
-    .str { color: var(--accent2); }
-    .comment { color: #555; }
-
-    /* Features */
-    .features {
-      padding: 60px 0;
-    }
-
-    .features h2 {
-      font-size: 28px;
-      font-weight: 600;
-      margin-bottom: 32px;
-      letter-spacing: -1px;
-    }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-
-    .feature {
+    .hero-cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 20px;
-    }
-
-    .feature h3 {
-      font-size: 15px;
-      margin-bottom: 6px;
-    }
-
-    .feature p {
-      font-size: 13px;
+      padding: 16px 28px;
+      font-family: var(--mono);
+      font-size: 14px;
       color: var(--text2);
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
     }
 
-    /* Agent section */
-    .agent-section {
-      padding: 60px 0;
+    .hero-cmd:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .hero-cmd .prompt { color: var(--accent); }
+    .hero-cmd .arg { color: var(--green); }
+
+    .hero-cmd .copy-hint {
+      position: absolute;
+      top: -30px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: var(--text3);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .hero-cmd:hover .copy-hint { opacity: 1; }
+
+    /* ── Flow ── */
+    .flow {
+      padding: 80px 0;
       border-top: 1px solid var(--border);
     }
 
-    .agent-section h2 {
-      font-size: 28px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      letter-spacing: -1px;
+    .flow-header {
+      text-align: center;
+      margin-bottom: 64px;
     }
 
-    .agent-section > .container > p {
+    .flow-header h2 {
+      font-family: var(--serif);
+      font-size: 40px;
+      font-weight: 400;
+      margin-bottom: 12px;
+    }
+
+    .flow-header p {
       color: var(--text2);
-      margin-bottom: 24px;
       font-size: 16px;
     }
 
-    .agent-cards {
+    .flow-steps {
+      display: flex;
+      gap: 2px;
+    }
+
+    .flow-step {
+      flex: 1;
+      background: var(--surface);
+      padding: 32px 28px;
+      position: relative;
+    }
+
+    .flow-step:first-child { border-radius: 16px 0 0 16px; }
+    .flow-step:last-child { border-radius: 0 16px 16px 0; }
+
+    .flow-step .num {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+    }
+
+    .flow-step h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .flow-step p {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+
+    .flow-step .arrow {
+      position: absolute;
+      right: -14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text3);
+      font-size: 18px;
+      z-index: 1;
+    }
+
+    /* ── Commands ── */
+    .commands {
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .commands h2 {
+      font-family: var(--serif);
+      font-size: 40px;
+      font-weight: 400;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .cmd-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .cmd-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .cmd-card:hover { border-color: rgba(167,139,250,0.3); }
+
+    .cmd-card:first-child {
+      grid-column: 1 / -1;
+    }
+
+    .cmd-top {
+      padding: 24px 28px 20px;
+    }
+
+    .cmd-name {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .cmd-desc {
+      font-size: 14px;
+      color: var(--text2);
+    }
+
+    .cmd-code {
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+      padding: 20px 28px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
+    .cmd-code .c { color: var(--text3); }
+    .cmd-code .k { color: var(--accent); }
+    .cmd-code .s { color: var(--green); }
+    .cmd-code .f { color: var(--orange); }
+
+    /* ── Permissions ── */
+    .perms {
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .perms h2 {
+      font-family: var(--serif);
+      font-size: 40px;
+      font-weight: 400;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .perm-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .perm-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+
+    .perm-item:hover { border-color: rgba(167,139,250,0.3); }
+
+    .perm-icon { font-size: 24px; margin-bottom: 10px; }
+
+    .perm-name {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .perm-detail {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    /* ── Agent ── */
+    .agent {
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .agent h2 {
+      font-family: var(--serif);
+      font-size: 40px;
+      font-weight: 400;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .agent > .container > p {
+      text-align: center;
+      color: var(--text2);
+      margin-bottom: 48px;
+      font-size: 16px;
+    }
+
+    .agent-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
+      margin-bottom: 32px;
     }
 
     .agent-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
+      border-radius: 16px;
+      padding: 28px;
+      transition: border-color 0.3s;
     }
 
-    .agent-card .logo {
-      font-size: 36px;
+    .agent-card:hover { border-color: rgba(167,139,250,0.3); }
+
+    .agent-card h3 {
+      font-size: 16px;
+      font-weight: 600;
       margin-bottom: 8px;
     }
 
-    .agent-card h3 {
-      font-size: 15px;
-      margin-bottom: 4px;
+    .agent-card .file {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent);
+      margin-bottom: 12px;
     }
 
     .agent-card p {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--text2);
+      line-height: 1.5;
     }
 
-    /* Permissions */
-    .permissions {
-      padding: 60px 0;
-    }
-
-    .permissions h2 {
-      font-size: 28px;
-      font-weight: 600;
-      margin-bottom: 24px;
-      letter-spacing: -1px;
-    }
-
-    .perm-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-
-    .perm-table th {
-      text-align: left;
-      padding: 10px 16px;
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border);
-      color: var(--text2);
-      font-weight: 500;
-    }
-
-    .perm-table td {
-      padding: 10px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .perm-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .perm-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-family: monospace;
-    }
-
-    .perm-badge.android { background: rgba(34,197,94,0.15); color: var(--green); }
-    .perm-badge.ios { background: rgba(59,130,246,0.15); color: var(--accent2); }
-
-    /* Footer */
-    footer {
-      padding: 40px 0;
+    .agent-or {
       text-align: center;
-      color: var(--text2);
+      color: var(--text3);
       font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .agent-url {
+      text-align: center;
+    }
+
+    .agent-url a {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid rgba(167,139,250,0.2);
+      border-radius: 8px;
+      padding: 10px 20px;
+      transition: all 0.3s;
+    }
+
+    .agent-url a:hover {
+      background: rgba(167,139,250,0.1);
+      border-color: var(--accent);
+    }
+
+    /* ── Prerequisites ── */
+    .prereq {
+      padding: 80px 0;
       border-top: 1px solid var(--border);
     }
 
-    footer a {
-      color: var(--accent2);
-      text-decoration: none;
+    .prereq h2 {
+      font-family: var(--serif);
+      font-size: 40px;
+      font-weight: 400;
+      text-align: center;
+      margin-bottom: 48px;
     }
 
+    .prereq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .prereq-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .prereq-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .prereq-card ul {
+      list-style: none;
+    }
+
+    .prereq-card li {
+      font-size: 14px;
+      color: var(--text2);
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(39,39,42,0.5);
+    }
+
+    .prereq-card li:last-child { border-bottom: none; }
+
+    .prereq-card li::before {
+      content: '→ ';
+      color: var(--accent);
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 48px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    footer a:hover { color: var(--accent); }
+
+    footer .sep { color: var(--text3); margin: 0 12px; }
+
+    /* ── Responsive ── */
     @media (max-width: 768px) {
-      .hero h1 { font-size: 32px; }
-      .mode-grid, .feature-grid, .agent-cards { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 44px; }
+      .flow-steps { flex-direction: column; }
+      .flow-step { border-radius: 0; }
+      .flow-step:first-child { border-radius: 16px 16px 0 0; }
+      .flow-step:last-child { border-radius: 0 0 16px 16px; }
+      .flow-step .arrow { display: none; }
+      .cmd-grid { grid-template-columns: 1fr; }
+      .cmd-card:first-child { grid-column: auto; }
+      .perm-grid { grid-template-columns: repeat(2, 1fr); }
+      .agent-grid { grid-template-columns: 1fr; }
+      .prereq-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <div class="hero">
+  <section class="hero">
     <div class="container">
-      <h1><span>web2app</span></h1>
-      <p>Turn any web content into native iOS & Android apps. One command.</p>
-      <div class="hero-install" onclick="navigator.clipboard.writeText('git clone https://github.com/momomo-agent/web2app.git && cd web2app && npm install && npm link')">
-        $ git clone → npm install → npm link
+      <div class="hero-badge">v0.1 — open source</div>
+      <h1>Web to <em>native</em>,<br>one command.</h1>
+      <p>Turn any website, HTML file, or web project into a native iOS & Android app. No Xcode or Android Studio knowledge needed.</p>
+      <div class="hero-cmd" onclick="navigator.clipboard.writeText('git clone https://github.com/momomo-agent/web2app.git && cd web2app && npm install && npm link')">
+        <span class="copy-hint">click to copy</span>
+        <span><span class="prompt">$</span> git clone <span class="arg">web2app</span> && npm install && npm link</span>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="modes">
+  <section class="flow">
     <div class="container">
-      <h2>Three modes</h2>
-      <div class="mode-grid">
-        <div class="mode-card">
-          <div class="icon">🌐</div>
-          <h3>URL</h3>
-          <p>Wrap any website into a native app. Just pass a URL.</p>
-        </div>
-        <div class="mode-card">
-          <div class="icon">📄</div>
-          <h3>File</h3>
-          <p>Single HTML file → full native app with offline support.</p>
-        </div>
-        <div class="mode-card">
-          <div class="icon">📦</div>
-          <h3>Project</h3>
-          <p>React, Vue, vanilla — any web project, auto-detected.</p>
-        </div>
+      <div class="flow-header">
+        <h2>Three inputs, two outputs</h2>
+        <p>URL, file, or project → APK and IPA</p>
       </div>
-    </div>
-  </div>
-
-  <div class="code-section">
-    <div class="container">
-      <h2>Usage</h2>
-
-      <div class="code-block">
-        <div class="code-header">
-          <span class="code-dot red"></span>
-          <span class="code-dot yellow"></span>
-          <span class="code-dot green"></span>
-          URL mode
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="num">INPUT 01</div>
+          <h3>🌐 URL</h3>
+          <p>Wrap any live website. The app loads your site in a native shell with full device API access.</p>
+          <span class="arrow">→</span>
         </div>
-        <pre><span class="comment"># Wrap a website into an Android app</span>
-<span class="cmd">web2app</span> init <span class="flag">--url</span> <span class="str">https://your-site.com</span> <span class="flag">--name</span> <span class="str">"My App"</span> <span class="flag">--platform</span> android
-
-<span class="comment"># Build APK</span>
-<span class="cmd">cd</span> my-app && <span class="cmd">web2app</span> build <span class="flag">--platform</span> android</pre>
-      </div>
-
-      <div class="code-block">
-        <div class="code-header">
-          <span class="code-dot red"></span>
-          <span class="code-dot yellow"></span>
-          <span class="code-dot green"></span>
-          File mode
+        <div class="flow-step">
+          <div class="num">INPUT 02</div>
+          <h3>📄 File</h3>
+          <p>Single HTML file becomes a fully offline native app. No server needed.</p>
+          <span class="arrow">→</span>
         </div>
-        <pre><span class="comment"># Turn an HTML file into an app (both platforms)</span>
-<span class="cmd">web2app</span> init <span class="flag">--source</span> <span class="str">./index.html</span> <span class="flag">--name</span> <span class="str">"My App"</span> <span class="flag">--platform</span> both</pre>
-      </div>
-
-      <div class="code-block">
-        <div class="code-header">
-          <span class="code-dot red"></span>
-          <span class="code-dot yellow"></span>
-          <span class="code-dot green"></span>
-          Project mode + permissions
-        </div>
-        <pre><span class="comment"># Web project with camera & mic permissions</span>
-<span class="cmd">web2app</span> init <span class="flag">--source</span> <span class="str">./my-project/</span> <span class="flag">--name</span> <span class="str">"My App"</span> \
-  <span class="flag">--permissions</span> <span class="str">camera,microphone,location</span> \
-  <span class="flag">--fullscreen</span> <span class="flag">--orientation</span> portrait</pre>
-      </div>
-    </div>
-  </div>
-
-  <div class="features">
-    <div class="container">
-      <h2>Features</h2>
-      <div class="feature-grid">
-        <div class="feature">
-          <h3>📱 iOS + Android</h3>
-          <p>Build for both platforms from a single project. APK and IPA output.</p>
-        </div>
-        <div class="feature">
-          <h3>🔒 Permissions</h3>
-          <p>Camera, microphone, location, storage, notifications — declare what you need.</p>
-        </div>
-        <div class="feature">
-          <h3>📡 Online & Offline</h3>
-          <p>URL mode for live sites, file/project mode for fully offline apps.</p>
-        </div>
-        <div class="feature">
-          <h3>🎨 Customizable</h3>
-          <p>App icon, splash screen, status bar color, orientation lock.</p>
-        </div>
-        <div class="feature">
-          <h3>⚡ Zero config</h3>
-          <p>Auto-detects build output (dist/, build/, public/). No config files needed.</p>
-        </div>
-        <div class="feature">
-          <h3>🤖 Agent-friendly</h3>
-          <p>Designed for AI agents. Claude Code, Cursor, OpenClaw — just paste the docs.</p>
+        <div class="flow-step">
+          <div class="num">INPUT 03</div>
+          <h3>📦 Project</h3>
+          <p>React, Vue, vanilla — auto-detects your build output and packages it.</p>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="agent-section">
+  <section class="commands">
     <div class="container">
-      <h2>Works with AI agents</h2>
-      <p>Give your agent this page, or use the config files below.</p>
-      <div class="agent-cards">
+      <h2>Five commands</h2>
+
+      <div class="cmd-grid">
+        <div class="cmd-card">
+          <div class="cmd-top">
+            <div class="cmd-name">web2app init</div>
+            <div class="cmd-desc">Initialize a project. Remembers your source path — no copying, no version drift.</div>
+          </div>
+          <div class="cmd-code">
+<span class="c"># URL mode</span>
+<span class="k">web2app</span> init <span class="f">--url</span> <span class="s">https://your-site.com</span> <span class="f">--name</span> <span class="s">"My App"</span> <span class="f">--platform</span> android
+
+<span class="c"># File mode</span>
+<span class="k">web2app</span> init <span class="f">--source</span> <span class="s">./index.html</span> <span class="f">--name</span> <span class="s">"My App"</span>
+
+<span class="c"># Project mode with permissions</span>
+<span class="k">web2app</span> init <span class="f">--source</span> <span class="s">./my-project/</span> <span class="f">--name</span> <span class="s">"My App"</span> \
+  <span class="f">--permissions</span> <span class="s">camera,microphone</span> <span class="f">--fullscreen</span>
+          </div>
+        </div>
+
+        <div class="cmd-card">
+          <div class="cmd-top">
+            <div class="cmd-name">web2app build</div>
+            <div class="cmd-desc">Build APK or IPA. Auto-syncs latest source files — always in sync.</div>
+          </div>
+          <div class="cmd-code">
+<span class="k">web2app</span> build <span class="f">--platform</span> android
+<span class="k">web2app</span> build <span class="f">--release</span>
+          </div>
+        </div>
+
+        <div class="cmd-card">
+          <div class="cmd-top">
+            <div class="cmd-name">web2app run</div>
+            <div class="cmd-desc">Build, install, launch — directly on your phone or emulator.</div>
+          </div>
+          <div class="cmd-code">
+<span class="k">web2app</span> run <span class="f">--platform</span> android
+<span class="k">web2app</span> run <span class="f">--device</span>
+          </div>
+        </div>
+
+        <div class="cmd-card">
+          <div class="cmd-top">
+            <div class="cmd-name">web2app doctor</div>
+            <div class="cmd-desc">Pre-flight check. Finds missing JDK, SDK, Xcode before you hit errors.</div>
+          </div>
+          <div class="cmd-code">
+<span class="k">web2app</span> doctor
+          </div>
+        </div>
+
+        <div class="cmd-card">
+          <div class="cmd-top">
+            <div class="cmd-name">web2app icon</div>
+            <div class="cmd-desc">One image → all sizes for both platforms. No manual resizing.</div>
+          </div>
+          <div class="cmd-code">
+<span class="k">web2app</span> icon <span class="s">./logo.png</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="perms">
+    <div class="container">
+      <h2>Permissions</h2>
+      <div class="perm-grid">
+        <div class="perm-item">
+          <div class="perm-icon">📷</div>
+          <div class="perm-name">camera</div>
+          <div class="perm-detail">Photo & video capture</div>
+        </div>
+        <div class="perm-item">
+          <div class="perm-icon">🎤</div>
+          <div class="perm-name">microphone</div>
+          <div class="perm-detail">Audio recording</div>
+        </div>
+        <div class="perm-item">
+          <div class="perm-icon">📍</div>
+          <div class="perm-name">location</div>
+          <div class="perm-detail">GPS coordinates</div>
+        </div>
+        <div class="perm-item">
+          <div class="perm-icon">💾</div>
+          <div class="perm-name">storage</div>
+          <div class="perm-detail">File system access</div>
+        </div>
+        <div class="perm-item">
+          <div class="perm-icon">🔔</div>
+          <div class="perm-name">notifications</div>
+          <div class="perm-detail">Push alerts</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="agent">
+    <div class="container">
+      <h2>Built for AI agents</h2>
+      <p>Your agent reads the config file. It knows what to do.</p>
+
+      <div class="agent-grid">
         <div class="agent-card">
-          <div class="logo">🦀</div>
           <h3>OpenClaw</h3>
-          <p>Copy <code>SKILL.md</code> to skills/</p>
+          <div class="file">SKILL.md</div>
+          <p>Copy to your skills directory. The agent picks it up automatically.</p>
         </div>
         <div class="agent-card">
-          <div class="logo">🤖</div>
           <h3>Claude Code</h3>
-          <p>Copy <code>AGENTS.md</code> to project root</p>
+          <div class="file">AGENTS.md</div>
+          <p>Drop in your project root. Claude Code reads it on startup.</p>
         </div>
         <div class="agent-card">
-          <div class="logo">▶️</div>
           <h3>Cursor</h3>
-          <p>Copy <code>.cursorrules</code> to project root</p>
+          <div class="file">.cursorrules</div>
+          <p>Copy to your project root. Cursor loads it as context.</p>
         </div>
       </div>
 
-      <div class="code-block" style="margin-top: 24px;">
-        <div class="code-header">
-          <span class="code-dot red"></span>
-          <span class="code-dot yellow"></span>
-          <span class="code-dot green"></span>
-          Agent setup
-        </div>
-        <pre><span class="comment"># 1. Install web2app</span>
-<span class="cmd">git clone</span> <span class="str">https://github.com/momomo-agent/web2app.git</span>
-<span class="cmd">cd</span> web2app && <span class="cmd">npm</span> install && <span class="cmd">npm</span> link
+      <div class="agent-or">or just send this page to any agent</div>
 
-<span class="comment"># 2. Agent config (pick one)</span>
-
-<span class="comment"># OpenClaw — copy SKILL.md to skills/</span>
-<span class="cmd">cp</span> SKILL.md ~/.openclaw/skills/web2app/SKILL.md
-
-<span class="comment"># Claude Code — copy AGENTS.md to your project</span>
-<span class="cmd">cp</span> AGENTS.md /path/to/your-project/
-
-<span class="comment"># Cursor — copy .cursorrules to your project</span>
-<span class="cmd">cp</span> .cursorrules /path/to/your-project/
-
-<span class="comment"># Or just send this page to any agent:</span>
-<span class="comment"># https://momomo-agent.github.io/web2app/</span></pre>
+      <div class="agent-url">
+        <a href="https://momomo-agent.github.io/web2app/">momomo-agent.github.io/web2app</a>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="permissions">
-    <div class="container">
-      <h2>Permissions reference</h2>
-      <div class="code-block">
-        <table class="perm-table">
-          <thead>
-            <tr>
-              <th>Flag</th>
-              <th>Android</th>
-              <th>iOS</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>camera</code></td>
-              <td><span class="perm-badge android">CAMERA</span></td>
-              <td><span class="perm-badge ios">NSCameraUsageDescription</span></td>
-            </tr>
-            <tr>
-              <td><code>microphone</code></td>
-              <td><span class="perm-badge android">RECORD_AUDIO</span></td>
-              <td><span class="perm-badge ios">NSMicrophoneUsageDescription</span></td>
-            </tr>
-            <tr>
-              <td><code>location</code></td>
-              <td><span class="perm-badge android">ACCESS_FINE_LOCATION</span></td>
-              <td><span class="perm-badge ios">NSLocationWhenInUseUsageDescription</span></td>
-            </tr>
-            <tr>
-              <td><code>storage</code></td>
-              <td><span class="perm-badge android">READ/WRITE_EXTERNAL_STORAGE</span></td>
-              <td><span class="perm-badge ios">NSPhotoLibraryUsageDescription</span></td>
-            </tr>
-            <tr>
-              <td><code>notifications</code></td>
-              <td><span class="perm-badge android">POST_NOTIFICATIONS</span></td>
-              <td><span class="perm-badge ios">Push Notifications capability</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="code-section">
+  <section class="prereq">
     <div class="container">
       <h2>Prerequisites</h2>
-      <div class="code-block">
-        <div class="code-header">
-          <span class="code-dot red"></span>
-          <span class="code-dot yellow"></span>
-          <span class="code-dot green"></span>
-          Requirements
+      <div class="prereq-grid">
+        <div class="prereq-card">
+          <h3>🤖 Android</h3>
+          <ul>
+            <li>JDK 17+</li>
+            <li>Android SDK (via Android Studio or CLI tools)</li>
+            <li>Gradle</li>
+            <li>adb (for <code>web2app run</code>)</li>
+          </ul>
         </div>
-        <pre><span class="comment"># Android</span>
-<span class="cmd">brew</span> install openjdk@17          <span class="comment"># or apt install openjdk-17-jdk</span>
-<span class="cmd">brew</span> install android-commandlinetools
-<span class="cmd">sdkmanager</span> <span class="str">"platforms;android-34"</span> <span class="str">"build-tools;34.0.0"</span>
-
-<span class="comment"># iOS (macOS only)</span>
-<span class="comment"># Install Xcode from Mac App Store</span>
-<span class="cmd">sudo</span> gem install cocoapods</pre>
+        <div class="prereq-card">
+          <h3>🍎 iOS</h3>
+          <ul>
+            <li>macOS only</li>
+            <li>Xcode 15+</li>
+            <li>CocoaPods</li>
+            <li>Apple Developer account (for device deploy)</li>
+          </ul>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
   <footer>
     <div class="container">
-      <p>
-        <a href="https://github.com/momomo-agent/web2app">GitHub</a> ·
-        MIT License ·
-        Built by <a href="https://github.com/momomo-agent">momomo-agent</a>
-      </p>
+      <a href="https://github.com/momomo-agent/web2app">GitHub</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/momomo-agent/web2app/blob/main/AGENTS.md">AGENTS.md</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/momomo-agent/web2app/blob/main/SKILL.md">SKILL.md</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/momomo-agent">momomo-agent</a>
     </div>
   </footer>
 
