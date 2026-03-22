@@ -3,8 +3,10 @@
 const { Command } = require('commander')
 const { init } = require('./init')
 const { build } = require('./build')
+const { run } = require('./run')
+const { doctor } = require('./doctor')
+const { icon } = require('./icon')
 const chalk = require('chalk')
-const path = require('path')
 const pkg = require('../package.json')
 
 const program = new Command()
@@ -40,13 +42,52 @@ program
 
 program
   .command('build')
-  .description('Build the native app')
+  .description('Build the native app (auto-syncs web source)')
   .option('--platform <platform>', 'Target platform: android, ios, both', 'both')
   .option('--release', 'Build release version', false)
   .option('--out <dir>', 'Output directory for APK/IPA')
   .action(async (opts) => {
     try {
       await build(opts)
+    } catch (e) {
+      console.error(chalk.red('Error:'), e.message)
+      process.exit(1)
+    }
+  })
+
+program
+  .command('run')
+  .description('Build, install and run on device/emulator')
+  .option('--platform <platform>', 'Target platform: android, ios', 'android')
+  .option('--device', 'Run on physical device (default: emulator)', false)
+  .action(async (opts) => {
+    try {
+      await run(opts)
+    } catch (e) {
+      console.error(chalk.red('Error:'), e.message)
+      process.exit(1)
+    }
+  })
+
+program
+  .command('doctor')
+  .description('Check environment and dependencies')
+  .action(async () => {
+    try {
+      await doctor()
+    } catch (e) {
+      console.error(chalk.red('Error:'), e.message)
+      process.exit(1)
+    }
+  })
+
+program
+  .command('icon')
+  .description('Generate app icons from a source image')
+  .argument('<image>', 'Source image (1024x1024 PNG recommended)')
+  .action(async (image) => {
+    try {
+      await icon(image)
     } catch (e) {
       console.error(chalk.red('Error:'), e.message)
       process.exit(1)

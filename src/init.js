@@ -4,10 +4,42 @@ const { execSync } = require('child_process')
 const chalk = require('chalk')
 
 const CAPACITOR_VERSION = '^6.0.0'
+const CONFIG_FILE = 'web2app.json'
 
 function generateBundleId(name) {
   const clean = name.toLowerCase().replace(/[^a-z0-9]/g, '')
   return `com.web2app.${clean}`
+}
+
+/**
+ * Resolve the actual web directory from source path.
+ * Checks for common build output dirs: dist/, build/, out/, public/
+ */
+function resolveWebDir(sourcePath) {
+  const abs = path.resolve(sourcePath)
+  const stat = fs.statSync(abs)
+  
+  if (!stat.isDirectory()) {
+    // Single file — return its parent
+    return { dir: path.dirname(abs), singleFile: path.basename(abs) }
+  }
+  
+  // Check for build output directories
+  const buildDirs = ['dist', 'build', 'out', 'public']
+  for (const dir of buildDirs) {
+    const candidate = path.join(abs, dir)
+    if (fs.pathExistsSync(candidate) && fs.pathExistsSync(path.join(candidate, 'index.html'))) {
+      return { dir: candidate }
+    }
+  }
+  
+  // Check if root has index.html
+  if (fs.pathExistsSync(path.join(abs, 'index.html'))) {
+    return { dir: abs }
+  }
+  
+  // Fallback to source dir
+  return { dir: abs }
 }
 
 async function init(opts) {
@@ -30,21 +62,37 @@ async function init(opts) {
   // 1. Create project directory
   await fs.ensureDir(projectDir)
 
-  // 2. Create package.json
+  // 2. Save web2app config (our own, not Capacitor's)
+  //    This is the single source of truth
+  const web2appConfig = {
+    name,
+    bundleId,
+    mode: url ? 'url' : 'local',
+    url: url || undefined,
+    source: source ? path.resolve(source) : undefined,
+    platform,
+    permissions: (permissions || '').split(',').filter(Boolean),
+    fullscreen: !!fullscreen,
+    orientation,
+    color,
+    icon: opts.icon ? path.resolve(opts.icon) : undefined,
+  }
+  
+  await fs.writeJson(path.join(projectDir, CONFIG_FILE), web2appConfig, { spaces: 2 })
+  console.log(chalk.green('✓'), CONFIG_FILE)
+
+  // 3. Create package.json
   const pkg = {
     name: name.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
     version: '1.0.0',
     private: true,
-    scripts: {
-      build: 'echo "No build step needed"'
-    },
     dependencies: {
       '@capacitor/core': CAPACITOR_VERSION,
-      '@capacitor/cli': CAPACITOR_VERSION
+      '@capacitor/cli': CAPACITOR_VERSION,
+      '@capacitor/status-bar': CAPACITOR_VERSION
     }
   }
 
-  // Add platform-specific packages
   if (platform === 'android' || platform === 'both') {
     pkg.dependencies['@capacitor/android'] = CAPACITOR_VERSION
   }
@@ -52,80 +100,63 @@ async function init(opts) {
     pkg.dependencies['@capacitor/ios'] = CAPACITOR_VERSION
   }
 
-  // Add permission plugins
-  const permList = (permissions || '').split(',').filter(Boolean)
+  // Permission plugins
+  const permList = web2appConfig.permissions
   const pluginMap = {
     camera: '@capacitor/camera',
-    microphone: '@nicolo-ribaudo/capacitor-microphone',
     location: '@capacitor/geolocation',
     storage: '@capacitor/filesystem',
     notifications: '@capacitor/push-notifications',
     haptics: '@capacitor/haptics',
-    share: '@capacitor/share',
-    clipboard: '@capacitor/clipboard',
-    statusbar: '@capacitor/status-bar'
   }
   
   for (const p of permList) {
-    if (pluginMap[p]) {
-      pkg.dependencies[pluginMap[p]] = 'latest'
-    }
+    if (pluginMap[p]) pkg.dependencies[pluginMap[p]] = 'latest'
   }
 
   await fs.writeJson(path.join(projectDir, 'package.json'), pkg, { spaces: 2 })
   console.log(chalk.green('✓'), 'package.json')
 
-  // 3. Create web directory
-  const webDir = path.join(projectDir, 'www')
-  await fs.ensureDir(webDir)
-
+  // 4. Prepare www/ directory
+  const wwwDir = path.join(projectDir, 'www')
+  
   if (source) {
-    // Copy local source
-    const srcPath = path.resolve(source)
-    const stat = await fs.stat(srcPath)
+    const resolved = resolveWebDir(source)
     
-    if (stat.isDirectory()) {
-      // Check for common build outputs
-      const buildDirs = ['dist', 'build', 'out', 'public']
-      let buildDir = srcPath
+    if (resolved.singleFile) {
+      // Single file: create www/ with the file and maybe an index.html redirect
+      await fs.ensureDir(wwwDir)
+      await fs.copy(path.join(resolved.dir, resolved.singleFile), path.join(wwwDir, resolved.singleFile))
       
-      for (const dir of buildDirs) {
-        const candidate = path.join(srcPath, dir)
-        if (await fs.pathExists(candidate)) {
-          buildDir = candidate
-          break
-        }
+      if (resolved.singleFile !== 'index.html') {
+        await fs.writeFile(path.join(wwwDir, 'index.html'),
+          `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${resolved.singleFile}"></head></html>`)
       }
-      
-      await fs.copy(buildDir, webDir)
-      console.log(chalk.green('✓'), `Copied ${buildDir} → www/`)
+      console.log(chalk.green('✓'), `Copied ${resolved.singleFile} → www/`)
     } else {
-      // Single file — create minimal HTML wrapper
-      await fs.copy(srcPath, path.join(webDir, path.basename(srcPath)))
+      // Directory: create symlink so changes auto-sync
+      // Remove www/ if exists
+      await fs.remove(wwwDir)
       
-      // If not index.html, create redirect
-      if (path.basename(srcPath) !== 'index.html') {
-        const redirect = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${path.basename(srcPath)}"></head></html>`
-        await fs.writeFile(path.join(webDir, 'index.html'), redirect)
-      }
-      console.log(chalk.green('✓'), `Copied ${srcPath} → www/`)
+      // Create symlink: www -> source directory
+      await fs.symlink(resolved.dir, wwwDir)
+      console.log(chalk.green('✓'), `Linked www/ → ${resolved.dir}`)
+      console.log(chalk.gray('   (changes to source auto-sync, no copying needed)'))
     }
   } else {
-    // URL mode — create WebView page
-    const html = generateURLWrapper(url, name, fullscreen, color)
-    await fs.writeFile(path.join(webDir, 'index.html'), html)
+    // URL mode: generate wrapper page
+    await fs.ensureDir(wwwDir)
+    const html = generateURLWrapper(url, name, color)
+    await fs.writeFile(path.join(wwwDir, 'index.html'), html)
     console.log(chalk.green('✓'), `Generated URL wrapper for ${url}`)
   }
 
-  // 4. Capacitor config
+  // 5. Capacitor config
   const capConfig = {
     appId: bundleId,
     appName: name,
     webDir: 'www',
-    server: url ? {
-      url: url,
-      cleartext: true
-    } : undefined,
+    server: url ? { url, cleartext: true } : undefined,
     plugins: {
       StatusBar: {
         overlaysWebView: true,
@@ -135,8 +166,7 @@ async function init(opts) {
     },
     android: {
       backgroundColor: color,
-      allowMixedContent: true,
-      appendUserAgent: 'web2app'
+      allowMixedContent: true
     },
     ios: {
       backgroundColor: color,
@@ -144,32 +174,12 @@ async function init(opts) {
     }
   }
 
-  // Fullscreen / status bar
-  if (fullscreen) {
-    capConfig.plugins.StatusBar = { style: 'dark', overlaysWebView: true }
-  }
-
-  // Screen orientation
   if (orientation !== 'any') {
     capConfig.android.orientation = orientation
-    capConfig.ios.preferredContentMode = orientation === 'portrait' ? 'mobile' : 'desktop'
-  }
-
-  // Permissions config
-  if (permList.includes('camera')) {
-    capConfig.plugins.Camera = {
-      permissionType: 'camera',
-      presentationStyle: 'popover'
-    }
   }
 
   await fs.writeJson(path.join(projectDir, 'capacitor.config.json'), capConfig, { spaces: 2 })
   console.log(chalk.green('✓'), 'capacitor.config.json')
-
-  // 5. Generate Android permissions manifest snippet
-  if (platform === 'android' || platform === 'both') {
-    await generateAndroidPermissions(projectDir, permList)
-  }
 
   // 6. Install dependencies
   console.log('')
@@ -184,10 +194,8 @@ async function init(opts) {
     execSync('npx cap add android', { cwd: projectDir, stdio: 'inherit' })
     console.log(chalk.green('✓'), 'Android platform added')
     
-    // Apply immersive mode
     await applyAndroidImmersive(projectDir, bundleId)
     
-    // Apply permissions to AndroidManifest.xml
     if (permList.length > 0) {
       await applyAndroidPermissions(projectDir, permList)
     }
@@ -206,104 +214,31 @@ async function init(opts) {
     }
   }
 
-  // 8. Copy web assets to native
-  execSync('npx cap copy', { cwd: projectDir, stdio: 'inherit' })
+  // 8. Sync web assets to native
+  execSync('npx cap sync', { cwd: projectDir, stdio: 'inherit' })
 
-  // 9. Handle icon
-  if (opts.icon) {
-    console.log(chalk.yellow('⚠'), 'Icon generation requires @capacitor/assets. Run:')
-    console.log(chalk.gray(`   cd ${projectDir} && npx @capacitor/assets generate --iconBackgroundColor ${color}`))
-  }
-
+  // Done
   console.log('')
-  console.log(chalk.green('✅ Project initialized!'))
+  console.log(chalk.green('✅ Project ready!'))
   console.log('')
-  console.log(chalk.cyan('Next steps:'))
-  console.log(chalk.gray(`   cd ${projectDir}`))
+  console.log(chalk.cyan('Commands:'))
+  console.log(chalk.gray(`   cd ${path.relative(process.cwd(), projectDir)}`))
+  console.log(chalk.gray('   web2app build --platform android    # Build APK'))
+  console.log(chalk.gray('   web2app run --platform android      # Run on device'))
+  console.log(chalk.gray('   web2app doctor                      # Check environment'))
+  console.log('')
   
-  if (platform === 'android' || platform === 'both') {
-    console.log(chalk.gray('   npx cap open android    # Open in Android Studio'))
-    console.log(chalk.gray('   web2app build --platform android'))
-  }
-  if (platform === 'ios' || platform === 'both') {
-    console.log(chalk.gray('   npx cap open ios        # Open in Xcode'))
-    console.log(chalk.gray('   web2app build --platform ios'))
+  if (source && !fs.lstatSync(wwwDir).isFile()) {
+    console.log(chalk.cyan('💡 Source is symlinked:'))
+    console.log(chalk.gray('   Edit your web files normally.'))
+    console.log(chalk.gray('   Run "web2app build" to rebuild — it auto-syncs.'))
   }
 
   return projectDir
 }
 
-async function applyAndroidImmersive(projectDir, bundleId) {
-  // Find MainActivity.java
-  const pkgPath = bundleId.replace(/\./g, '/')
-  const mainActivityPath = path.join(projectDir, 'android', 'app', 'src', 'main', 'java', pkgPath, 'MainActivity.java')
-  
-  if (!await fs.pathExists(mainActivityPath)) {
-    console.log(chalk.yellow('⚠'), 'MainActivity.java not found, skipping immersive mode')
-    return
-  }
-  
-  const immersiveCode = `package ${bundleId};
-
-import android.os.Bundle;
-import android.view.View;
-import android.view.WindowManager;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
-import com.getcapacitor.BridgeActivity;
-
-public class MainActivity extends BridgeActivity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        // Edge-to-edge: extend content behind status bar and navigation bar
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-
-        // Make status bar and navigation bar transparent
-        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
-        getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
-
-        // Optional: control system bar appearance (light/dark icons)
-        WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        if (controller != null) {
-            controller.setAppearanceLightStatusBars(false);
-            controller.setAppearanceLightNavigationBars(false);
-        }
-    }
-}
-`
-  
-  await fs.writeFile(mainActivityPath, immersiveCode)
-  console.log(chalk.green('✓'), 'Android immersive mode applied')
-  
-  // Also update styles.xml for edge-to-edge theme
-  const stylesPath = path.join(projectDir, 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml')
-  if (await fs.pathExists(stylesPath)) {
-    const styles = `<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowTranslucentStatus">false</item>
-        <item name="android:windowTranslucentNavigation">false</item>
-        <item name="android:enforceNavigationBarContrast">false</item>
-        <item name="android:enforceStatusBarContrast">false</item>
-        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
-    </style>
-    <style name="AppTheme.NoActionBar" parent="AppTheme">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
-</resources>
-`
-    await fs.writeFile(stylesPath, styles)
-    console.log(chalk.green('✓'), 'Android styles.xml updated for edge-to-edge')
-  }
-}
-
-function generateURLWrapper(url, name, fullscreen, color) {
+// ── URL Wrapper ──
+function generateURLWrapper(url, name, color) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -332,26 +267,61 @@ function generateURLWrapper(url, name, fullscreen, color) {
 </html>`
 }
 
-async function generateAndroidPermissions(projectDir, permList) {
-  const permMap = {
-    camera: ['android.permission.CAMERA'],
-    microphone: ['android.permission.RECORD_AUDIO', 'android.permission.MODIFY_AUDIO_SETTINGS'],
-    location: ['android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION'],
-    storage: ['android.permission.READ_EXTERNAL_STORAGE', 'android.permission.WRITE_EXTERNAL_STORAGE'],
-    notifications: ['android.permission.POST_NOTIFICATIONS'],
+// ── Android Immersive ──
+async function applyAndroidImmersive(projectDir, bundleId) {
+  const pkgPath = bundleId.replace(/\./g, '/')
+  const mainActivityPath = path.join(projectDir, 'android', 'app', 'src', 'main', 'java', pkgPath, 'MainActivity.java')
+  
+  if (!await fs.pathExists(mainActivityPath)) return
+  
+  const code = `package ${bundleId};
+
+import android.os.Bundle;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+        WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        if (c != null) {
+            c.setAppearanceLightStatusBars(false);
+            c.setAppearanceLightNavigationBars(false);
+        }
+    }
+}
+`
+  await fs.writeFile(mainActivityPath, code)
+  console.log(chalk.green('✓'), 'Immersive mode')
+
+  const stylesPath = path.join(projectDir, 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml')
+  if (await fs.pathExists(stylesPath)) {
+    await fs.writeFile(stylesPath, `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+</resources>
+`)
   }
-  
-  const perms = permList.flatMap(p => permMap[p] || [])
-  const snippet = perms.map(p => `    <uses-permission android:name="${p}" />`).join('\n')
-  
-  await fs.writeFile(path.join(projectDir, 'android-permissions.xml'), 
-    `<!-- Add these to AndroidManifest.xml inside <manifest> tag -->\n${snippet}\n`)
-  console.log(chalk.green('✓'), 'android-permissions.xml')
 }
 
+// ── Android Permissions ──
 async function applyAndroidPermissions(projectDir, permList) {
   const manifestPath = path.join(projectDir, 'android', 'app', 'src', 'main', 'AndroidManifest.xml')
-  
   if (!await fs.pathExists(manifestPath)) return
   
   const permMap = {
@@ -373,12 +343,12 @@ async function applyAndroidPermissions(projectDir, permList) {
   }
   
   await fs.writeFile(manifestPath, manifest)
-  console.log(chalk.green('✓'), 'Android permissions applied')
+  console.log(chalk.green('✓'), 'Android permissions')
 }
 
+// ── iOS Permissions ──
 async function applyIOSPermissions(projectDir, permList) {
   const plistPath = path.join(projectDir, 'ios', 'App', 'App', 'Info.plist')
-  
   if (!await fs.pathExists(plistPath)) return
   
   const descMap = {
@@ -398,7 +368,7 @@ async function applyIOSPermissions(projectDir, permList) {
   }
   
   await fs.writeFile(plistPath, plist)
-  console.log(chalk.green('✓'), 'iOS permissions applied')
+  console.log(chalk.green('✓'), 'iOS permissions')
 }
 
-module.exports = { init }
+module.exports = { init, CONFIG_FILE }
