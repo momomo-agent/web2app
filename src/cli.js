@@ -13,7 +13,7 @@ const program = new Command()
 
 program
   .name('web2app')
-  .description('Turn any web content into native iOS & Android apps')
+  .description('Turn any web content into native iOS, Android & Mac apps')
   .version(pkg.version)
 
 program
@@ -23,7 +23,7 @@ program
   .option('--id <id>', 'App bundle ID (e.g., com.example.app)')
   .option('--url <url>', 'Remote URL to wrap')
   .option('--source <path>', 'Local web source (file or directory)')
-  .option('--platform <platform>', 'Target platform: android, ios, both', 'both')
+  .option('--platform <platform>', 'Target platform: android, ios, mac, both, all', 'both')
   .option('--icon <path>', 'App icon (1024x1024 PNG)')
   .option('--splash <path>', 'Splash screen image')
   .option('--fullscreen', 'Enable fullscreen mode', false)
@@ -43,9 +43,9 @@ program
 program
   .command('build')
   .description('Build the native app (auto-syncs web source)')
-  .option('--platform <platform>', 'Target platform: android, ios, both', 'both')
+  .option('--platform <platform>', 'Target platform: android, ios, mac, both, all', 'both')
   .option('--release', 'Build release version', false)
-  .option('--out <dir>', 'Output directory for APK/IPA')
+  .option('--out <dir>', 'Output directory for APK/IPA/DMG')
   .action(async (opts) => {
     try {
       await build(opts)
@@ -58,7 +58,7 @@ program
 program
   .command('run')
   .description('Build, install and run on device/emulator')
-  .option('--platform <platform>', 'Target platform: android, ios', 'android')
+  .option('--platform <platform>', 'Target platform: android, ios, mac', 'android')
   .option('--device', 'Run on physical device (default: emulator)', false)
   .action(async (opts) => {
     try {

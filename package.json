@@ -1,7 +1,7 @@
 {
   "name": "web2app",
   "version": "0.1.0",
-  "description": "Turn any web content into native iOS & Android apps",
+  "description": "Turn any web content into native iOS, Android & Mac apps",
   "bin": {
     "web2app": "./src/cli.js"
   },

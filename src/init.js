@@ -82,22 +82,45 @@ async function init(opts) {
   console.log(chalk.green('✓'), CONFIG_FILE)
 
   // 3. Create package.json
+  const wantsMobileInit = platform === 'android' || platform === 'ios' || platform === 'both' || platform === 'all'
+  
   const pkg = {
     name: name.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
     version: '1.0.0',
     private: true,
-    dependencies: {
-      '@capacitor/core': CAPACITOR_VERSION,
-      '@capacitor/cli': CAPACITOR_VERSION,
-      '@capacitor/status-bar': CAPACITOR_VERSION
+    dependencies: {}
+  }
+
+  // Capacitor deps only for mobile
+  if (wantsMobileInit) {
+    pkg.dependencies['@capacitor/core'] = CAPACITOR_VERSION
+    pkg.dependencies['@capacitor/cli'] = CAPACITOR_VERSION
+    pkg.dependencies['@capacitor/status-bar'] = CAPACITOR_VERSION
+    
+    if (platform === 'android' || platform === 'both' || platform === 'all') {
+      pkg.dependencies['@capacitor/android'] = CAPACITOR_VERSION
+    }
+    if (platform === 'ios' || platform === 'both' || platform === 'all') {
+      pkg.dependencies['@capacitor/ios'] = CAPACITOR_VERSION
     }
   }
 
-  if (platform === 'android' || platform === 'both') {
-    pkg.dependencies['@capacitor/android'] = CAPACITOR_VERSION
-  }
-  if (platform === 'ios' || platform === 'both') {
-    pkg.dependencies['@capacitor/ios'] = CAPACITOR_VERSION
+  // Electron deps for mac
+  if (platform === 'mac' || platform === 'all') {
+    pkg.dependencies['electron'] = '^33.0.0'
+    pkg.devDependencies = { 'electron-builder': '^25.0.0' }
+    pkg.main = 'mac/main.js'
+    pkg.build = {
+      appId: bundleId,
+      productName: name,
+      mac: {
+        category: 'public.app-category.utilities',
+        target: ['dmg'],
+        icon: 'mac/icon.icns'
+      },
+      directories: { output: 'mac-dist' },
+      files: ['www/**/*', 'mac/**/*']
+    }
   }
 
   // Permission plugins
@@ -190,7 +213,10 @@ async function init(opts) {
   console.log('')
   console.log(chalk.cyan('📱 Adding platforms...'))
   
-  if (platform === 'android' || platform === 'both') {
+  const wantsMobile = platform === 'android' || platform === 'ios' || platform === 'both' || platform === 'all'
+  const wantsMac = platform === 'mac' || platform === 'all'
+
+  if (platform === 'android' || platform === 'both' || platform === 'all') {
     execSync('npx cap add android', { cwd: projectDir, stdio: 'inherit' })
     console.log(chalk.green('✓'), 'Android platform added')
     
@@ -201,7 +227,7 @@ async function init(opts) {
     }
   }
   
-  if (platform === 'ios' || platform === 'both') {
+  if (platform === 'ios' || platform === 'both' || platform === 'all') {
     try {
       execSync('npx cap add ios', { cwd: projectDir, stdio: 'inherit' })
       console.log(chalk.green('✓'), 'iOS platform added')
@@ -214,8 +240,14 @@ async function init(opts) {
     }
   }
 
-  // 8. Sync web assets to native
-  execSync('npx cap sync', { cwd: projectDir, stdio: 'inherit' })
+  if (wantsMac) {
+    await scaffoldMac(projectDir, name, bundleId, url, color)
+  }
+
+  // 8. Sync web assets to native (only if mobile platforms exist)
+  if (wantsMobile) {
+    execSync('npx cap sync', { cwd: projectDir, stdio: 'inherit' })
+  }
 
   // Done
   console.log('')
@@ -369,6 +401,60 @@ async function applyIOSPermissions(projectDir, permList) {
   
   await fs.writeFile(plistPath, plist)
   console.log(chalk.green('✓'), 'iOS permissions')
+}
+
+// ── Mac (Electron) Scaffold ──
+async function scaffoldMac(projectDir, name, bundleId, url, color) {
+  const macDir = path.join(projectDir, 'mac')
+  await fs.ensureDir(macDir)
+
+  // Main process
+  const mainJs = `const { app, BrowserWindow, Menu } = require('electron')
+const path = require('path')
+
+const URL_MODE = ${url ? `'${url}'` : 'null'}
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1280,
+    height: 800,
+    minWidth: 480,
+    minHeight: 360,
+    titleBarStyle: 'hiddenInset',
+    trafficLightPosition: { x: 16, y: 16 },
+    backgroundColor: '${color}',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    }
+  })
+
+  if (URL_MODE) {
+    win.loadURL(URL_MODE)
+  } else {
+    win.loadFile(path.join(__dirname, '..', 'www', 'index.html'))
+  }
+
+  // Clean menu
+  const template = [
+    { role: 'appMenu' },
+    { role: 'editMenu' },
+    { role: 'viewMenu' },
+    { role: 'windowMenu' },
+  ]
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
+app.whenReady().then(createWindow)
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })
+app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
+`
+  await fs.writeFile(path.join(macDir, 'main.js'), mainJs)
+  console.log(chalk.green('✓'), 'Mac: Electron main process')
+
+  // Preload (minimal, for future use)
+  await fs.writeFile(path.join(macDir, 'preload.js'), '// Preload script — extend as needed\n')
+  console.log(chalk.green('✓'), 'Mac: Electron scaffold ready')
 }
 
 module.exports = { init, CONFIG_FILE }

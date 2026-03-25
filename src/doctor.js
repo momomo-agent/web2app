@@ -65,6 +65,28 @@ async function doctor() {
     check('ios-deploy', 'ios-deploy --version 2>&1 | head -1')
   }
   
+  // Mac (Electron)
+  console.log('')
+  console.log(chalk.gray('Mac (Electron):'))
+  check('Node.js', 'node --version')
+  const hasMacDir = await fs.pathExists(path.join(process.cwd(), 'mac'))
+  if (hasMacDir) {
+    const hasElectron = await fs.pathExists(path.join(process.cwd(), 'node_modules', 'electron'))
+    if (hasElectron) {
+      check('Electron', 'npx electron --version 2>&1')
+    } else {
+      console.log(chalk.yellow('  ⚠'), 'Electron: not installed (run npm install)')
+    }
+    const hasBuilder = await fs.pathExists(path.join(process.cwd(), 'node_modules', 'electron-builder'))
+    if (hasBuilder) {
+      console.log(chalk.green('  ✓'), 'electron-builder: installed')
+    } else {
+      console.log(chalk.yellow('  ⚠'), 'electron-builder: not installed (needed for packaging)')
+    }
+  } else {
+    console.log(chalk.gray('  -'), 'No mac platform in current project')
+  }
+  
   // Check current project
   console.log('')
   console.log(chalk.gray('Project:'))

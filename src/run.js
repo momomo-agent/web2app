@@ -30,8 +30,10 @@ async function run(opts) {
     await runAndroid(device)
   } else if (platform === 'ios') {
     await runIOS(device)
+  } else if (platform === 'mac') {
+    await runMac()
   } else {
-    throw new Error('Please specify --platform android or --platform ios for run')
+    throw new Error('Please specify --platform android, ios, or mac for run')
   }
 }
 
@@ -137,6 +139,30 @@ async function runIOS(device) {
   }
   
   console.log(chalk.green('✅ Running on', device ? 'device' : 'simulator'))
+}
+
+async function runMac() {
+  const macDir = path.join(process.cwd(), 'mac')
+  
+  if (!await fs.pathExists(macDir)) {
+    throw new Error('Mac platform not found. Run "web2app init --platform mac" first.')
+  }
+
+  console.log(chalk.cyan('💻 Running Mac app...'))
+  
+  // Check electron is installed
+  const electronPath = path.join(process.cwd(), 'node_modules', '.bin', 'electron')
+  if (!await fs.pathExists(electronPath)) {
+    console.log(chalk.cyan('📦 Installing electron...'))
+    execSync('npm install electron@^33.0.0', { stdio: 'inherit' })
+  }
+
+  execSync('npx electron .', { 
+    cwd: process.cwd(), 
+    stdio: 'inherit' 
+  })
+  
+  console.log(chalk.green('✅'), 'Mac app closed')
 }
 
 module.exports = { run, syncSource }

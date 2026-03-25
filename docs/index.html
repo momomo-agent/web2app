@@ -405,7 +405,7 @@
 
     .prereq-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 16px;
     }
 
@@ -480,7 +480,7 @@
     <div class="container">
       <div class="hero-badge">v0.1 — open source</div>
       <h1>Web to <em>native</em>,<br>one command.</h1>
-      <p>Turn any website, HTML file, or web project into a native iOS & Android app. No Xcode or Android Studio knowledge needed.</p>
+      <p>Turn any website, HTML file, or web project into a native iOS, Android & Mac app. No Xcode or Android Studio knowledge needed.</p>
       <div class="hero-cmd" onclick="navigator.clipboard.writeText('git clone https://github.com/momomo-agent/web2app.git && cd web2app && npm install && npm link')">
         <span class="copy-hint">click to copy</span>
         <span><span class="prompt">$</span> git clone <span class="arg">web2app</span> && npm install && npm link</span>
@@ -491,8 +491,8 @@
   <section class="flow">
     <div class="container">
       <div class="flow-header">
-        <h2>Three inputs, two outputs</h2>
-        <p>URL, file, or project → APK and IPA</p>
+        <h2>Three inputs, three platforms</h2>
+        <p>URL, file, or project → APK, IPA, and DMG</p>
       </div>
       <div class="flow-steps">
         <div class="flow-step">
@@ -530,23 +530,23 @@
 <span class="c"># URL mode</span>
 <span class="k">web2app</span> init <span class="f">--url</span> <span class="s">https://your-site.com</span> <span class="f">--name</span> <span class="s">"My App"</span> <span class="f">--platform</span> android
 
-<span class="c"># File mode</span>
-<span class="k">web2app</span> init <span class="f">--source</span> <span class="s">./index.html</span> <span class="f">--name</span> <span class="s">"My App"</span>
+<span class="c"># Mac desktop app</span>
+<span class="k">web2app</span> init <span class="f">--url</span> <span class="s">https://your-site.com</span> <span class="f">--name</span> <span class="s">"My App"</span> <span class="f">--platform</span> mac
 
-<span class="c"># Project mode with permissions</span>
-<span class="k">web2app</span> init <span class="f">--source</span> <span class="s">./my-project/</span> <span class="f">--name</span> <span class="s">"My App"</span> \
-  <span class="f">--permissions</span> <span class="s">camera,microphone</span> <span class="f">--fullscreen</span>
+<span class="c"># All platforms (iOS + Android + Mac)</span>
+<span class="k">web2app</span> init <span class="f">--source</span> <span class="s">./my-project/</span> <span class="f">--name</span> <span class="s">"My App"</span> <span class="f">--platform</span> all \
+  <span class="f">--permissions</span> <span class="s">camera,microphone</span>
           </div>
         </div>
 
         <div class="cmd-card">
           <div class="cmd-top">
             <div class="cmd-name">web2app build</div>
-            <div class="cmd-desc">Build APK or IPA. Auto-syncs latest source files — always in sync.</div>
+            <div class="cmd-desc">Build APK, IPA, or DMG. Auto-syncs latest source files — always in sync.</div>
           </div>
           <div class="cmd-code">
 <span class="k">web2app</span> build <span class="f">--platform</span> android
-<span class="k">web2app</span> build <span class="f">--release</span>
+<span class="k">web2app</span> build <span class="f">--platform</span> mac <span class="f">--release</span>  <span class="c"># → .dmg</span>
           </div>
         </div>
 
@@ -668,6 +668,15 @@
             <li>Xcode 15+</li>
             <li>CocoaPods</li>
             <li>Apple Developer account (for device deploy)</li>
+          </ul>
+        </div>
+        <div class="prereq-card">
+          <h3>💻 Mac</h3>
+          <ul>
+            <li>Node.js 18+</li>
+            <li>Electron (auto-installed)</li>
+            <li>electron-builder (auto-installed for packaging)</li>
+            <li>No Xcode needed</li>
           </ul>
         </div>
       </div>

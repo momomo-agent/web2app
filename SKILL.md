@@ -1,11 +1,11 @@
 ---
 name: web2app
-description: Turn any web content (URL, HTML file, or web project) into native iOS & Android apps. Supports permissions, fullscreen, custom icons, and offline mode. Built on Capacitor.
+description: Turn any web content (URL, HTML file, or web project) into native iOS, Android & Mac apps. Supports permissions, fullscreen, custom icons, and offline mode. Mobile via Capacitor, Mac via Electron.
 ---
 
 # web2app
 
-Turn any web content into native iOS & Android apps.
+Turn any web content into native iOS, Android & Mac apps.
 
 ## Installation
 
@@ -32,14 +32,24 @@ web2app init --source ./index.html --name "MyApp" --platform both
 
 **3. Project mode** — Full web project:
 ```bash
-web2app init --source ./my-project/ --name "MyApp" --platform both
+web2app init --source ./my-project/ --name "MyApp" --platform all
 ```
 
 ### Build
 
 ```bash
 cd my-app
-web2app build --platform android  # or ios, or both
+web2app build --platform android  # APK
+web2app build --platform mac      # .app (dev)
+web2app build --platform mac --release  # .dmg
+web2app build --platform all      # everything
+```
+
+### Run
+
+```bash
+web2app run --platform android    # emulator
+web2app run --platform mac        # Electron window
 ```
 
 ## Options
@@ -49,13 +59,23 @@ web2app init \
   --name "App Name" \
   --id com.example.app \
   --url https://site.com \
-  --platform both \
+  --platform all \              # android | ios | mac | both | all
   --permissions camera,microphone,location,storage,notifications \
   --fullscreen \
   --orientation portrait \
   --color "#ffffff" \
   --out ./output
 ```
+
+### Platform values
+
+| Value | Platforms |
+|-------|----------|
+| `android` | Android only |
+| `ios` | iOS only |
+| `mac` | macOS only (Electron) |
+| `both` | iOS + Android |
+| `all` | iOS + Android + Mac |
 
 ## Permissions
 
@@ -76,10 +96,15 @@ web2app init \
 - Xcode 15+
 - CocoaPods
 
+**Mac:**
+- Node.js 18+
+- Electron + electron-builder (auto-installed)
+
 ## Output
 
 - **Android**: APK file in `android/app/build/outputs/apk/`
 - **iOS**: Open in Xcode to archive and export IPA
+- **Mac**: `.app` in `mac-dist/mac-arm64/` or `.dmg` in `mac-dist/`
 
 ## Examples
 
@@ -92,17 +117,23 @@ web2app init \
   --permissions microphone \
   --fullscreen
 
-# URL wrapper with all permissions
+# URL wrapper → Mac desktop app
+web2app init \
+  --url https://example.com \
+  --name "Example" \
+  --platform mac
+
+# All platforms with permissions
 web2app init \
   --url https://example.com \
   --name "Example" \
   --permissions camera,microphone,location,storage \
-  --platform both
+  --platform all
 ```
 
 ## Documentation
 
-Full docs: https://momomo-agent.github.io/web2app/
+Full docs: https://web2app.momomo.dev
 
 ## Repository
 

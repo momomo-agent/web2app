@@ -25,19 +25,28 @@ async function build(opts) {
   // Auto-sync web source (core fix: no more stale copies)
   await syncSource(config)
 
-  // Capacitor sync
-  console.log(chalk.cyan('📦 Syncing native projects...'))
-  execSync('npx cap copy', { stdio: 'inherit' })
-  execSync('npx cap sync', { stdio: 'inherit' })
+  const wantsMobile = platform === 'android' || platform === 'ios' || platform === 'both' || platform === 'all'
+
+  // Capacitor sync (only for mobile)
+  if (wantsMobile) {
+    console.log(chalk.cyan('📦 Syncing native projects...'))
+    execSync('npx cap copy', { stdio: 'inherit' })
+    execSync('npx cap sync', { stdio: 'inherit' })
+  }
 
   // Build Android
-  if (platform === 'android' || platform === 'both') {
+  if (platform === 'android' || platform === 'both' || platform === 'all') {
     await buildAndroid(config, release, out)
   }
 
   // Build iOS
-  if (platform === 'ios' || platform === 'both') {
+  if (platform === 'ios' || platform === 'both' || platform === 'all') {
     await buildIOS(config, release, out)
+  }
+
+  // Build Mac
+  if (platform === 'mac' || platform === 'all') {
+    await buildMac(config, release, out)
   }
 }
 
@@ -108,6 +117,67 @@ async function buildIOS(config, release, outDir) {
 
   console.log(chalk.green('✅'), 'iOS build complete')
   console.log(chalk.gray('   To export IPA: npx cap open ios → Xcode → Archive'))
+}
+
+async function buildMac(config, release, outDir) {
+  const macDir = path.join(process.cwd(), 'mac')
+  
+  if (!await fs.pathExists(macDir)) {
+    throw new Error('Mac platform not found. Run "web2app init --platform mac" first.')
+  }
+
+  if (process.platform !== 'darwin') {
+    console.log(chalk.yellow('⚠'), 'Mac builds are best done on macOS. Continuing anyway...')
+  }
+
+  console.log(chalk.cyan('💻 Building Mac app...'))
+
+  // Check electron-builder is available
+  const builderPath = path.join(process.cwd(), 'node_modules', '.bin', 'electron-builder')
+  if (!await fs.pathExists(builderPath)) {
+    console.log(chalk.cyan('📦 Installing electron-builder...'))
+    execSync('npm install --save-dev electron-builder@^25.0.0', { stdio: 'inherit' })
+  }
+
+  const args = ['--mac']
+  if (!release) args.push('--dir') // dev build = unpacked directory (faster)
+  
+  execSync(`npx electron-builder ${args.join(' ')}`, {
+    cwd: process.cwd(),
+    stdio: 'inherit',
+    env: { ...process.env, CSC_IDENTITY_AUTO_DISCOVERY: 'false' } // skip codesign for dev
+  })
+
+  // Find output
+  const distDir = path.join(process.cwd(), 'mac-dist')
+  if (await fs.pathExists(distDir)) {
+    const files = await fs.readdir(distDir)
+    const dmg = files.find(f => f.endsWith('.dmg'))
+    const appDir = files.find(f => f === 'mac' || f === 'mac-arm64' || f === 'mac-universal')
+    
+    if (dmg) {
+      const dmgPath = path.join(distDir, dmg)
+      const size = ((await fs.stat(dmgPath)).size / 1024 / 1024).toFixed(1)
+      if (outDir) {
+        await fs.ensureDir(outDir)
+        const dest = path.join(outDir, dmg)
+        await fs.copy(dmgPath, dest)
+        console.log(chalk.green('✅'), `DMG (${size} MB): ${dest}`)
+      } else {
+        console.log(chalk.green('✅'), `DMG (${size} MB): ${dmgPath}`)
+      }
+    } else if (appDir) {
+      const appDirPath = path.join(distDir, appDir)
+      const apps = (await fs.readdir(appDirPath)).filter(f => f.endsWith('.app'))
+      if (apps.length > 0) {
+        console.log(chalk.green('✅'), `App: ${path.join(appDirPath, apps[0])}`)
+      } else {
+        console.log(chalk.green('✅'), 'Mac build complete')
+      }
+    } else {
+      console.log(chalk.green('✅'), 'Mac build complete')
+    }
+  }
 }
 
 module.exports = { build }
